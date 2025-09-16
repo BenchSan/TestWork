@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -59,6 +60,7 @@ public class WeaponController : MonoBehaviour
             BulletType.Standard  => _standardBulletPrefab,
             BulletType.Explosive => _explosiveBulletPrefab,
             BulletType.Ricochet  => _ricochetBulletPrefab,
+            _ => _standardBulletPrefab
         };
 
         GameObject go = Instantiate(prefab, _muzzle.position, Quaternion.identity);
