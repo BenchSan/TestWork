@@ -18,10 +18,10 @@ public class WeaponController : MonoBehaviour
     
 
     [Header("Colors")]
-    [ColorUsage(true,true)][SerializeField] private Color _standardColor = Color.cyan;
-    [ColorUsage(true,true)][SerializeField] private Color _explosiveColor = new Color(1f, 0.4f, 0f);
-    [ColorUsage(true,true)][SerializeField] private Color _ricochetColor = new Color(0.2f, 1f, 0.2f);
-    [ColorUsage(true,true)][SerializeField] private Color _readyFlashColor = Color.white;
+    [SerializeField] private Color _standardColor = Color.cyan;
+    [SerializeField] private Color _explosiveColor = new Color(1f, 0.4f, 0f);
+    [SerializeField] private Color _ricochetColor = new Color(0.2f, 1f, 0.2f);
+    [SerializeField] private Color _readyFlashColor = Color.white;
 
     private bool _canShoot = true;
     private BulletType _selectedBulletType = BulletType.Standard;
@@ -32,6 +32,10 @@ public class WeaponController : MonoBehaviour
     private const float Cooldown = 1f;
     private const float FlashTime = 0.15f;
 
+    
+    public void SetStandard()  { _selectedBulletType = BulletType.Standard;  _currentGunColor = _standardColor;  if (_canShoot) StartCoroutine(ChangeEmissionRoutine(_currentGunColor, _currentGunColor, 0f)); }
+    public void SetExplosive() { _selectedBulletType = BulletType.Explosive; _currentGunColor = _explosiveColor; if (_canShoot) StartCoroutine(ChangeEmissionRoutine(_currentGunColor, _currentGunColor, 0f)); }
+    public void SetRicochet()  { _selectedBulletType = BulletType.Ricochet;  _currentGunColor = _ricochetColor;  if (_canShoot) StartCoroutine(ChangeEmissionRoutine(_currentGunColor, _currentGunColor, 0f)); }
     void Start()
     {
         SetStandard();
@@ -46,73 +50,54 @@ public class WeaponController : MonoBehaviour
         }
     }
     
-    public void SetStandard()  { _selectedBulletType = BulletType.Standard;  SetGunColor(_standardColor); }
-    public void SetExplosive() { _selectedBulletType = BulletType.Explosive; SetGunColor(_explosiveColor); }
-    public void SetRicochet()  { _selectedBulletType = BulletType.Ricochet;  SetGunColor(_ricochetColor); }
-
-    private void SetGunColor(Color c)
-    {
-        _currentGunColor = c;
-        ApplyEmission(c);
-    }
-    
     private void Shoot()
     {
-        var target = _enemyManager.GetFrontEnemy();
+        Enemy target = _enemyManager.GetFrontEnemy();
 
-        var prefab = _selectedBulletType switch
+        GameObject prefab = _selectedBulletType switch
         {
             BulletType.Standard  => _standardBulletPrefab,
             BulletType.Explosive => _explosiveBulletPrefab,
             BulletType.Ricochet  => _ricochetBulletPrefab,
-            _ => _standardBulletPrefab
         };
 
-        var go = Instantiate(prefab, _muzzle.position, Quaternion.identity);
-        go.GetComponent<BulletBase>().Init(target, _enemyManager);
-
+        GameObject go = Instantiate(prefab, _muzzle.position, Quaternion.identity);
+        go.GetComponent<BulletBase>().Init(target);
         _canShoot = false;
+        StartCoroutine(ChangeEmissionRoutine(_currentGunColor, Color.black, 0f));
     }
 
     private IEnumerator CooldownRoutine()
     {
-        SetBlack();
         yield return new WaitForSeconds(Cooldown);
+        yield return ChangeEmissionRoutine(Color.black, _currentGunColor, FlashTime);
         _canShoot = true;
-        yield return LerpEmission(Color.black, _currentGunColor, FlashTime);
     }
-    
-    private void ApplyEmission(Color c)
+
+    private void ApplyColor(Color c)
     {
-        if (!_canShoot)
-        {
-            return;
-        }
         foreach (var r in _emissionPistolPartsRenderer)
-        {
             r.material.SetColor(EmissionColor, c);
-        }
     }
 
-    private void SetBlack()
+    private IEnumerator ChangeEmissionRoutine(Color from, Color to, float time)
     {
-        foreach (var r in _emissionPistolPartsRenderer)
+        if (time <= 0f)
         {
-            r.material.SetColor(EmissionColor,Color.black);
+            ApplyColor(to);
+            yield break;
         }
-    }
 
-    private IEnumerator LerpEmission(Color from, Color to, float time)
-    {
         float t = 0f;
+        ApplyColor(from);
         while (t < time)
         {
             t += Time.deltaTime;
             float k = t / time;
-            ApplyEmission(Color.Lerp(from, to, k));
+            ApplyColor(Color.Lerp(from, to, k));
             yield return null;
         }
-        ApplyEmission(to);
+        ApplyColor(to);
     }
 }
 

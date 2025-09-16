@@ -5,7 +5,7 @@ using UnityEngine;
 public class ExplosiveBullet : BulletBase
 {
     [SerializeField] private float radius = 3f;
-    [SerializeField] private LayerMask enemyMask = ~0;
+    [SerializeField] private LayerMask enemyMask;
     [SerializeField] private GameObject _explosionPrefab;
 
     protected override void OnHit(Enemy hitEnemy)

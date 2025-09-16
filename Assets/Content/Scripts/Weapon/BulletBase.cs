@@ -4,24 +4,18 @@ public abstract class BulletBase : MonoBehaviour
 {
     [SerializeField] protected float speed = 18f;
 
-    protected EnemyManager manager;
+    private readonly Vector3 _aimYOffset = Vector3.up;
     private Vector3 _dir;
-    
-    public virtual void Init(Enemy target, EnemyManager mgr)
+
+    public virtual void Init(Enemy target)
     {
-        manager = mgr;
-        _dir = CalcDirTo(target);
+        SetDirection(CalcDirTo(target));
     }
 
-    private Vector3 CalcDirTo(Enemy target)
+    protected Vector3 CalcDirTo(Enemy target)
     {
-        var targetPos = target.transform.position + Vector3.up;
+        var targetPos = target.transform.position + _aimYOffset;
         return (targetPos - transform.position).normalized;
-    }
-    
-    protected void SetDirectionTo(Enemy newTarget)
-    {
-        _dir = CalcDirTo(newTarget);
     }
 
     protected virtual void Update()
@@ -33,6 +27,11 @@ public abstract class BulletBase : MonoBehaviour
     {
         if (other.TryGetComponent(out Enemy e))
             OnHit(e);
+    }
+
+    protected void SetDirection(Vector3 newDir)
+    {
+        _dir = newDir.normalized;
     }
 
     protected abstract void OnHit(Enemy hitEnemy);

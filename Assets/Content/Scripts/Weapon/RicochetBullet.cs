@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class RicochetBullet : BulletBase
 {
-    [SerializeField] private int maxBounces = 3;
+    private const int MaxBounces = 3;
     private int _bounces;
     private Enemy _lastHit;
 
@@ -11,14 +11,14 @@ public class RicochetBullet : BulletBase
         hitEnemy.TakeDamage();
         _lastHit = hitEnemy;
 
-        if (_bounces >= maxBounces)
+        if (_bounces >= MaxBounces)
         {
             Destroy(gameObject);
             return;
         }
 
-        var next = manager.GetRandomOtherEnemy(_lastHit);
-        SetDirectionTo(next);
+        var next = EnemyManager.Instance.GetRandomOtherEnemy(_lastHit);
+        SetDirection(CalcDirTo(next));
         _bounces++;
     }
 }
