@@ -17,7 +17,7 @@ public class RicochetBullet : BulletBase
             return;
         }
 
-        var next = EnemyManager.Instance.GetRandomOtherEnemy(_lastHit);
+        Enemy next = EnemyManager.Instance.GetRandomOtherEnemy(_lastHit);
         SetDirection(CalcDirTo(next));
         _bounces++;
     }
