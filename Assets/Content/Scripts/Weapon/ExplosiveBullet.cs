@@ -1,27 +1,22 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class ExplosiveBullet : BulletBase
+public class ExplosiveBullet : Bullet
 {
-    [SerializeField] private float radius = 3f;
-    [SerializeField] private LayerMask enemyMask;
+    private const float ExplosionRadius = 10f;
     [SerializeField] private GameObject _explosionPrefab;
 
-    protected override void OnHit(Enemy hitEnemy)
+    protected override void OnEnemyHit(Enemy hitEnemy)
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, radius, enemyMask, QueryTriggerInteraction.Collide);
-        foreach (var h in hits)
-            if (h.TryGetComponent(out Enemy e))
-            {
-                e.TakeDamage();
-            }
-        Instantiate(_explosionPrefab, transform.position, Quaternion.identity);
+        Collider[] hits = new Collider[3];
+        if (Physics.OverlapSphereNonAlloc(transform.position, ExplosionRadius, hits, enemyMask) != 0)
+        {
+            foreach (var hitColliders in hits)
+                if (hitColliders.TryGetComponent(out Enemy enemy))
+                {
+                    enemy.TakeDamage();
+                }
+        }
+        Destroy(Instantiate(_explosionPrefab, transform.position, Quaternion.identity),3f);
         Destroy(gameObject);
-    }
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, radius);
     }
 }

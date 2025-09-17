@@ -1,48 +1,48 @@
-using System;
 using System.Collections;
-using Unity.VisualScripting;
+using DG.Tweening;
 using UnityEngine;
 
 public class WeaponController : MonoBehaviour
 {
-    public enum BulletType { Standard, Explosive, Ricochet }
-
-    [Header("Refs")]
+    private static readonly int EmissionColor = Shader.PropertyToID("_EmissionColor");
+    private const float ReloadingCooldown = 1f;
+    private const float FlashTime = 0.15f;
+    
+    [Header("References")]
     [SerializeField] private Transform _muzzle;
-    [SerializeField] private EnemyManager _enemyManager;
     [SerializeField] private Renderer[] _emissionPistolPartsRenderer;
 
     [Header("Prefabs")]
-    [SerializeField] private GameObject _standardBulletPrefab;
-    [SerializeField] private GameObject _explosiveBulletPrefab;
-    [SerializeField] private GameObject _ricochetBulletPrefab;
+    [SerializeField] private Bullet _standardBulletPrefab;
+    [SerializeField] private Bullet _explosiveBulletPrefab;
+    [SerializeField] private Bullet _ricochetBulletPrefab;
     
 
     [Header("Colors")]
-    [SerializeField] private Color _standardColor = Color.cyan;
-    [SerializeField] private Color _explosiveColor = new Color(1f, 0.4f, 0f);
-    [SerializeField] private Color _ricochetColor = new Color(0.2f, 1f, 0.2f);
-    [SerializeField] private Color _readyFlashColor = Color.white;
+    [ColorUsage(true,true)][SerializeField] private Color _standardColor = Color.cyan;
+    [ColorUsage(true,true)][SerializeField] private Color _explosiveColor = new Color(1f, 0.4f, 0f);
+    [ColorUsage(true,true)][SerializeField] private Color _ricochetColor = new Color(0.2f, 1f, 0.2f);
 
     private bool _canShoot = true;
-    private BulletType _selectedBulletType = BulletType.Standard;
     private Color _currentGunColor;
-    private Coroutine _flashRoutine;
-
-    private const string EmissionColor = "_EmissionColor";
-    private const float Cooldown = 1f;
-    private const float FlashTime = 0.15f;
-
+    private Bullet _selectedBullet;
     
-    public void SetStandard()  { _selectedBulletType = BulletType.Standard;  _currentGunColor = _standardColor;  if (_canShoot) StartCoroutine(ChangeEmissionRoutine(_currentGunColor, _currentGunColor, 0f)); }
-    public void SetExplosive() { _selectedBulletType = BulletType.Explosive; _currentGunColor = _explosiveColor; if (_canShoot) StartCoroutine(ChangeEmissionRoutine(_currentGunColor, _currentGunColor, 0f)); }
-    public void SetRicochet()  { _selectedBulletType = BulletType.Ricochet;  _currentGunColor = _ricochetColor;  if (_canShoot) StartCoroutine(ChangeEmissionRoutine(_currentGunColor, _currentGunColor, 0f)); }
-    void Start()
+    private void Start()
     {
-        SetStandard();
+        SetStandardBullet();
     }
 
-    void Update()
+    private void SetBullet(Color gunColor, Bullet selectedBullet)
+    {
+        _currentGunColor = gunColor;
+        _selectedBullet = selectedBullet;
+    }
+
+    public void SetStandardBullet() =>  SetBullet(_standardColor, _standardBulletPrefab);
+    public void SetExplosiveBullet() =>  SetBullet(_explosiveColor, _explosiveBulletPrefab);
+    public void SetRicochetBullet() =>  SetBullet(_ricochetColor, _ricochetBulletPrefab);
+
+    private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space) && _canShoot)
         {
@@ -53,53 +53,30 @@ public class WeaponController : MonoBehaviour
     
     private void Shoot()
     {
-        Enemy target = _enemyManager.GetFrontEnemy();
-
-        GameObject prefab = _selectedBulletType switch
-        {
-            BulletType.Standard  => _standardBulletPrefab,
-            BulletType.Explosive => _explosiveBulletPrefab,
-            BulletType.Ricochet  => _ricochetBulletPrefab,
-            _ => _standardBulletPrefab
-        };
-
-        GameObject go = Instantiate(prefab, _muzzle.position, Quaternion.identity);
-        go.GetComponent<BulletBase>().Init(target);
+        Instantiate(_selectedBullet.gameObject, _muzzle.position, Quaternion.identity);
         _canShoot = false;
-        StartCoroutine(ChangeEmissionRoutine(_currentGunColor, Color.black, 0f));
     }
 
     private IEnumerator CooldownRoutine()
     {
-        yield return new WaitForSeconds(Cooldown);
-        yield return ChangeEmissionRoutine(Color.black, _currentGunColor, FlashTime);
+        ApplyColor(Color.black);
+        yield return new WaitForSeconds(ReloadingCooldown);
+        ApplyColor(_currentGunColor,FlashTime);
+        yield return new WaitForSeconds(FlashTime);
         _canShoot = true;
     }
 
-    private void ApplyColor(Color c)
+    private void ApplyColor(Color color, float time = 0f)
     {
         foreach (var r in _emissionPistolPartsRenderer)
-            r.material.SetColor(EmissionColor, c);
+            r.material.DOColor(color,EmissionColor, time);
     }
-
-    private IEnumerator ChangeEmissionRoutine(Color from, Color to, float time)
+    
+    public void SetColorOnButtonClick()
     {
-        if (time <= 0f)
-        {
-            ApplyColor(to);
-            yield break;
-        }
-
-        float t = 0f;
-        ApplyColor(from);
-        while (t < time)
-        {
-            t += Time.deltaTime;
-            float k = t / time;
-            ApplyColor(Color.Lerp(from, to, k));
-            yield return null;
-        }
-        ApplyColor(to);
+        if(_canShoot)
+            ApplyColor(_currentGunColor);
     }
+    
 }
 
