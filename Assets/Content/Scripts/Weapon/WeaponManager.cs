@@ -50,7 +50,6 @@ public class WeaponController : MonoBehaviour
             StartCoroutine(CooldownRoutine());
         }
     }
-    
     private void Shoot()
     {
         Instantiate(_selectedBullet.gameObject, _muzzle.position, Quaternion.identity);

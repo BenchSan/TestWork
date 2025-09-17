@@ -26,6 +26,7 @@ public class Enemy : MonoBehaviour
 
     public void TakeDamage()
     {
+        _animator.SetTrigger(HitTrigger);
         StartCoroutine(ResetColorAfterDelay());
     }
 
@@ -33,7 +34,6 @@ public class Enemy : MonoBehaviour
     {
         foreach (var rend in _childrenRenderers)
             rend.material.color = _hitColor;
-        _animator.SetTrigger(HitTrigger);
         yield return new WaitForSeconds(HitFlashTime);
         foreach (var rend in _childrenRenderers)
             rend.material.color = _baseColor;

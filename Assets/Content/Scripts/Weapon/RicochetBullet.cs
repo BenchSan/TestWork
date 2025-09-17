@@ -6,11 +6,9 @@ public class RicochetBullet : Bullet
     private const float SearchingEnemiesRadius = 10f;
     private int _bounces;
     private Enemy _lastHit;
-
     protected override void OnEnemyHit(Enemy lastHitEnemy)
     {
         lastHitEnemy.TakeDamage();
-
         if (_bounces >= MaxBounces)
         {
             Destroy(gameObject);

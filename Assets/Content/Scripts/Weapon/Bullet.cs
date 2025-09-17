@@ -11,9 +11,9 @@ public class Bullet : MonoBehaviour
         SetDirection(transform.forward);
     }
 
-    protected void SetDirection(Vector3 newDir)
+    protected void SetDirection(Vector3 newDirection)
     {
-        _direction = newDir.normalized;
+        _direction = newDirection.normalized;
     }
 
     protected void FixedUpdate()
@@ -26,8 +26,8 @@ public class Bullet : MonoBehaviour
     {
         if (1 << other.gameObject.layer == enemyMask.value)
         {
-            if (other.TryGetComponent(out Enemy e))
-                OnEnemyHit(e);
+            if (other.TryGetComponent(out Enemy enemy))
+                OnEnemyHit(enemy);
         }
     }
 
