@@ -3,6 +3,7 @@ using UnityEngine;
 public class RicochetBullet : Bullet
 {
     private const int MaxBounces = 3;
+    private const int EnemiesLimit = 3;
     private const float SearchingEnemiesRadius = 10f;
     private int _bounces;
     private Enemy _lastHit;
@@ -14,7 +15,7 @@ public class RicochetBullet : Bullet
             Destroy(gameObject);
             return;
         }
-        Collider[] hits = new Collider[3];
+        Collider[] hits = new Collider[EnemiesLimit];
         if (Physics.OverlapSphereNonAlloc(transform.position, SearchingEnemiesRadius, hits,enemyMask) != 0)
         {
             Enemy nextEnemy = null;
